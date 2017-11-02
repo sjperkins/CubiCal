@@ -248,7 +248,8 @@ def cluster_sources(sm, use_ddes):
         except:
             clus['{}'.format(s.getTag('cluster'))] = [s]
 
-    clus["die"] = ddes['False']
+    if ddes['False']:
+        clus["die"] = ddes['False']
 
     for i in clus.keys():
         stype = {'pnt': [], 'gau': []}
