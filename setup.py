@@ -25,6 +25,9 @@
 import os
 import sys
 import logging
+from pprint import pformat
+
+from distutils.fancy_getopt import translate_longopt
 
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
@@ -107,16 +110,21 @@ def _setup_extensions():
          Extension("cubical.kernels.cyt_slope", ["cubical/kernels/cyt_slope.cpp"],
             include_dirs=[include_path], extra_compile_args=cmpl_args, extra_link_args=link_args)])
 
+def option_names(options):
+    return [translate_longopt(n.rstrip("=")) for n,_,_ in options]
+
 class BuildCommand(build_ext):
-  _custom_options = ('test',)
+  _build_command_options = [('test=', None, "Test options")]
+  user_options = _build_command_options + build_ext.user_options
 
   def initialize_options(self):
     """ Initialise custom options """
 
-    # Set any custom options to None
-    for o in self._custom_options:
+    # Initialise our user options
+    for o in option_names(self._build_command_options):
       setattr(self, o, None)
 
+    # Now defer to the parent which will initialise its own options
     build_ext.initialize_options(self)
 
   def run(self):
@@ -125,15 +133,19 @@ class BuildCommand(build_ext):
     initialize_options and finalize_options will already have been run...
 
     Now override run() to:
-    * Save any custom options created on the object
+    * Save any options created on the object
     * Re-run self.initialize_options() to set custom options and self.extensions to None
     * Create custom extensions through _setup_extensions()
     * Re-run self.finalize_options() to run setuptools internal setup on the extensions.
-    * Re-apply any custom options to the object
+    * Re-apply any options to the object
     """
+    # Save this class's configured user options
+    opt_names = option_names(self._build_command_options)
+    saved_options = {o: getattr(self, o) for o in opt_names}
 
-    # Save any of our custom options
-    saved_options = { o: getattr(self, o) for o in self._custom_options }
+    # Save all user options for later sanity checks
+    all_opt_names = option_names(self.user_options)
+    pre_opts = {o: getattr(self, o) for o in all_opt_names}
 
     # Reset the build_ext options here
     # In particular this sets self.extensions to None
@@ -146,15 +158,25 @@ class BuildCommand(build_ext):
       log.exception("Exception creating extensions")
       raise
 
-    # Now re-run finalize options to re-create the self.extensions
+    # Now re-run finalize options to re-create self.extensions
     self.finalize_options()
 
-    # Re-apply any custom options
+    # Re-apply any previously configured user options for this class
     for o, v in saved_options.items():
       setattr(self, o, v)
 
     # Test that custom option is correctly set
     assert self.test == 'test'
+
+    # Now recover all options for sanity check with previous options
+    post_opts = {o: getattr(self, o) for o in all_opt_names}
+
+    if not pre_opts == post_opts:
+        astr = pformat(pre_opts)
+        nstr = pformat(post_opts)
+        raise ValueError("Option mismatch\n"
+                        "Before%s\n"
+                        "After%s\n" % (astr, nstr))
 
     # Do the extension builds
     build_ext.run(self)
