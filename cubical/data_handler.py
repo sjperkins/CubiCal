@@ -666,7 +666,7 @@ class Tile(object):
 
         if 'weigh' in data:
             wgt_arr = self._column_to_cube(data['weigh'], t_dim, f_dim, rows, freq_slice, self.handler.ftype)
-            wgt_arr = np.sqrt(np.sum(wgt_arr, axis=-1))  # take the square root of sum over correlations
+            wgt_arr = np.mean(wgt_arr, axis=-1)
             wgt_arr[flagged] = 0
             wgt_arr = wgt_arr.reshape([1, t_dim, f_dim, nants, nants])
         else:
@@ -1718,7 +1718,13 @@ class DataHandler:
             print>> log, "  inserting new column %s" % (col_name)
             desc = self.ms.getcoldesc(like_col)
             desc["name"] = col_name
-            desc['comment'] = desc['comment'].replace(" ", "_")  # got this from Cyril, not sure why
+            desc["comment"] = desc["comment"].replace(" ", "_")  # got this from Cyril, not sure why
+            dminfo = self.ms.getdminfo(like_col)
+            dminfo["NAME"] = "{}-{}".format(dminfo["NAME"], col_name)
+            # if a different type is specified, insert that
+            if like_type:
+                desc['valueType'] = like_type
+            self.ms.addcols(desc, dminfo)
             # if a different type is specified, insert that
             if like_type:
                 desc['valueType'] = like_type
