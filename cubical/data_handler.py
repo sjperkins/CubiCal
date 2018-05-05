@@ -1725,10 +1725,6 @@ class DataHandler:
             if like_type:
                 desc['valueType'] = like_type
             self.ms.addcols(desc, dminfo)
-            # if a different type is specified, insert that
-            if like_type:
-                desc['valueType'] = like_type
-            self.ms.addcols(desc)
             return True
         return False
 
