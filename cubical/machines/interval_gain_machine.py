@@ -166,7 +166,7 @@ class PerIntervalGains(MasterMachine):
         """
         gh = self.gains.transpose(0,1,2,3,5,4).conj()
 
-        cyfull.cyapply_gains(model_arr, self.gains, gh, self.t_int, self.f_int)
+        cyfull.cyapply_gains(model_arr, self.gains, gh, *self.gain_intervals)
 
         return model_arr
 
@@ -197,7 +197,7 @@ class PerIntervalGains(MasterMachine):
         if corr_vis is None:
             corr_vis = np.empty_like(obser_arr)
 
-        cyfull.cycompute_corrected(obser_arr, g_inv, gh_inv, corr_vis, self.t_int, self.f_int)
+        cyfull.cycompute_corrected(obser_arr, g_inv, gh_inv, corr_vis, *self.gain_intervals)
 
         return corr_vis, flag_count
 

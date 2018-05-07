@@ -684,8 +684,6 @@ def run_solver(solver_type, itile, chunk_key, sol_opts, debug_opts):
 
         obser_arr, model_arr, flags_arr, weight_arr = tile.get_chunk_cubes(chunk_key)
         
-#        import pdb; pdb.set_trace()
-
         chunk_ts, chunk_fs, _, freq_slice = tile.get_chunk_tfs(chunk_key)
 
         # apply IFR-based gains, if any
