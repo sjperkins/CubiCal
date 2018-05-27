@@ -238,8 +238,9 @@ def main(debugging=False):
                           beam_m_axis=GD["model"]["beam-m-axis"],
                           active_subset=GD["sol"]["subset"],
                           min_baseline=GD["sol"]["min-bl"],
-                          max_baseline=GD["sol"]["max-bl"])
-
+                          max_baseline=GD["sol"]["max-bl"],
+                          do_load_CASA_kwtables = GD["out"]["casa-gaintables"])
+        
         data_handler.global_handler = ms
 
         # With a single Jones term, create a gain machine factory based on its type.
@@ -265,7 +266,7 @@ def main(debugging=False):
             raise UserInputError("we have '--model-ddes always', but no direction dependent Jones terms enabled")
 
         ms.init_models(GD["model"]["list"].split(","),
-                       GD["weight"]["column"].split(","),
+                       GD["weight"]["column"].split(",") if GD["weight"]["column"] else None,
                        mb_opts=GD["montblanc"],
                        use_ddes=have_dd_jones and dde_mode != 'never')
 
