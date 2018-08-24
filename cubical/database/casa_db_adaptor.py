@@ -173,12 +173,13 @@ class casa_caltable_factory(object):
                     spwid = db.ddid_spw_map[ddid]
                     minfreq = np.min(db.spwchanfreq[spwid] - 0.5 * db.spwchanwidth[spwid])
                     maxfreq = np.max(db.spwchanfreq[spwid] + 0.5 * db.spwchanwidth[spwid]) 
-                    ddsolfreqindx = np.argwhere(np.logical_and(db[gname].grid[db[gname].ax.freq] >= minfreq,
-                                                               db[gname].grid[db[gname].ax.freq] <= maxfreq))
+                    ddsolfreqindx = np.logical_and(db[gname].grid[db[gname].ax.freq] >= minfreq,
+                                                   db[gname].grid[db[gname].ax.freq] <= maxfreq)
+                    nchan = np.sum(ddsolfreqindx)
                     params = np.swapaxes(db[gname].get_cube()[:, :, ddsolfreqindx, :, :],
-                                         2, 3).reshape(ndir * ntime * nant, len(ddsolfreqindx), ncorr) 
-                    paramerrs = np.swapaxes(paramerrs.get_cube()[:, :, ddsolfreqindx, :, :],
-                                            2, 3).reshape(ndir * ntime * nant, len(ddsolfreqindx), ncorr) 
+                                         2, 3).reshape(ndir * ntime * nant, nchan, ncorr)
+                    paramerrs = np.swapaxes(paramerrs[:, :, ddsolfreqindx, :, :],
+                                            2, 3).reshape(ndir * ntime * nant, nchan, ncorr)
                     flags = np.ma.getmaskarray(params)
                     fieldid = np.repeat(np.arange(ndir), ntime * nant) # dir (marked as field) is slowest varying
                     time = np.repeat(np.tile(db[gname].grid[db[gname].ax.time], ndir), nant)
@@ -248,13 +249,18 @@ class casa_caltable_factory(object):
                     spwid = db.ddid_spw_map[ddid]
                     minfreq = np.min(db.spwchanfreq[spwid] - 0.5 * db.spwchanwidth[spwid])
                     maxfreq = np.max(db.spwchanfreq[spwid] + 0.5 * db.spwchanwidth[spwid]) 
-                    ddsolfreqindx = np.argwhere(np.logical_and(db[gname].grid[db[gname].ax.freq] >= minfreq,
-                                                               db[gname].grid[db[gname].ax.freq] <= maxfreq))
+                    ddsolfreqindx = np.logical_and(db[gname].grid[db[gname].ax.freq] >= minfreq,
+                                                   db[gname].grid[db[gname].ax.freq] <= maxfreq)
+                    nchan = np.sum(ddsolfreqindx)
                     jones_entries = [0, 3] if diag else [1, 2] # diagonal or crosshands
-                    params = np.swapaxes(db[gname].get_cube()[:, :, ddsolfreqindx, :, :], 
-                                         2, 3).reshape(ndir * ntime * nant, len(ddsolfreqindx), ncorr1 * ncorr2)[:, :, jones_entries]
-                    paramerrs = np.swapaxes(paramerrs[:, :, ddsolfreqindx, :, :],
-                                            2, 3).reshape(ndir * ntime * nant, len(ddsolfreqindx), ncorr1 * ncorr2)[:, :, jones_entries]
+                    params = np.swapaxes(db[gname].get_cube()[:, :, ddsolfreqindx, :, :, :],
+                                         2, 3).reshape(ndir * ntime * nant,
+                                                       nchan,
+                                                       ncorr1 * ncorr2)[:, :, jones_entries]
+                    paramerrs = np.swapaxes(paramerrs[:, :, ddsolfreqindx, :, :, :],
+                                            2, 3).reshape(ndir * ntime * nant,
+                                                          nchan,
+                                                          ncorr1 * ncorr2)[:, :, jones_entries]
                     flags = np.ma.getmaskarray(params)
                     fieldid = np.repeat(np.arange(ndir), ntime * nant) # dir (marked as field) is slowest varying
                     time = np.repeat(np.tile(db[gname].grid[db[gname].ax.time], ndir), nant)
@@ -327,13 +333,14 @@ class casa_caltable_factory(object):
                     spwid = db.ddid_spw_map[ddid]
                     minfreq = np.min(db.spwchanfreq[spwid] - 0.5 * db.spwchanwidth[spwid])
                     maxfreq = np.max(db.spwchanfreq[spwid] + 0.5 * db.spwchanwidth[spwid]) 
-                    ddsolfreqindx = np.argwhere(np.logical_and(db[gname].grid[db[gname].ax.freq] >= minfreq,
-                                                               db[gname].grid[db[gname].ax.freq] <= maxfreq))
+                    ddsolfreqindx = np.logical_and(db[gname].grid[db[gname].ax.freq] >= minfreq,
+                                                   db[gname].grid[db[gname].ax.freq] <= maxfreq)
+                    nchan = np.sum(ddsolfreqindx)
                     # note -- CASA K table delays are in nanoseconds. This presumes delays in the cubical tables are already denormalized into seconds
                     params = np.swapaxes(db[gname].get_cube()[:, :, ddsolfreqindx, :, :],
-                                         2, 3).reshape(ndir * ntime * nant, len(ddsolfreqindx), ncorr) * 1.0e9
+                                         2, 3).reshape(ndir * ntime * nant, nchan, ncorr) * 1.0e9
                     paramerrs = np.swapaxes(paramerrs[:, :, ddsolfreqindx, :, :],
-                                            2, 3).reshape(ndir * ntime * nant, len(ddsolfreqindx), ncorr) * 1.0e9
+                                            2, 3).reshape(ndir * ntime * nant, nchan, ncorr) * 1.0e9
                     flags = np.ma.getmaskarray(params)
                     fieldid = np.repeat(np.arange(ndir), ntime * nant) # dir (marked as field) is slowest varying
                     time = np.repeat(np.tile(db[gname].grid[db[gname].ax.time], ndir), nant)
